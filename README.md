@@ -59,53 +59,73 @@ Hệ thống Themis LexiGuard áp dụng cơ chế **Kẹp chì Số hóa (Crypt
 
 ```mermaid
 flowchart TD
-    subgraph Flow1 ["1️⃣ Quy Trình Niêm Phong Kẹp Chì (Sealing Report Flow)"]
-        A1["📱 Mobile / Web App\nCán bộ QA bấm 'Duyệt báo cáo'"] --> B1["🌐 API Gateway\nPOST /reports/:id/approve"]
-        B1 --> C1["⚙️ Backend Cryptographic Engine\nTính toán SHA-256 Block Fingerprint:\nSHA-256(id + batchCode + orgId + checksum(4_Keys) + previousHash + timestamp)"]
-        C1 --> D1["💾 Supabase PostgreSQL & Audit Log\nLưu reports.integrityHash + Append-Only Merkle Block\n(Khóa cứng hồ sơ - Bất biến)"]
+    classDef blueBox fill:#1E3A8A,stroke:#3B82F6,stroke-width:2px,color:#FFFFFF;
+    classDef amberBox fill:#78350F,stroke:#F59E0B,stroke-width:2px,color:#FFFFFF;
+    classDef greenBox fill:#064E3B,stroke:#10B981,stroke-width:2px,color:#FFFFFF;
+    classDef redBox fill:#7F1D1D,stroke:#EF4444,stroke-width:2px,color:#FFFFFF;
+    classDef purpleBox fill:#4C1D95,stroke:#8B5CF6,stroke-width:2px,color:#FFFFFF;
+
+    subgraph Flow1 ["🔐 1. Quy Trình Niêm Phong Kẹp Chì (Sealing Report Flow)"]
+        A1["📱 Mobile / Web App<br/>Cán bộ QA bấm 'Duyệt báo cáo'"]:::blueBox
+        B1["🌐 API Gateway<br/>POST /reports/:id/approve"]:::blueBox
+        C1["⚙️ Backend Cryptographic Engine<br/>Tính toán SHA-256 Fingerprint:<br/>SHA-256(id + batchCode + orgId + checksum + timestamp)"]:::amberBox
+        D1["💾 Supabase DB & Audit Log<br/>Lưu reports.integrityHash + Merkle Block<br/>(Khóa cứng hồ sơ - Bất biến)"]:::greenBox
+
+        A1 --> B1 --> C1 --> D1
     end
 
-    subgraph Flow2 ["2️⃣ Quy Trình Xác Thực Liêm Chính Thực Địa (Field Verification Flow)"]
-        A2["📱 Mobile App (Tab Liêm chính)\nCán bộ Hải quan GACC dán mã băm / quét QR"] --> B2["🌐 API Gateway\nGET /integrity/verify/:hash"]
-        B2 --> C2["⚙️ Backend Integrity Engine\nTra cứu đối soát chuỗi băm Merkle Chain"]
-        C2 --> D2{"Kết Quả Đối Soát"}
-        D2 -->|✅ Tìm thấy & Khớp 100%| E2["🟢 VERIFIED: TRUE\nMã băm NGUYÊN VẸN & HỢP LỆ\n• Mã Lô: DURIAN-2024-912\n• 4 Khóa: Phyto + Lab + CO + PKG\n• Đơn vị: Sầu riêng Tây Nguyên"]
-        D2 -->|❌ Không tìm thấy / Sai lệch| F2["🔴 VERIFIED: FALSE\nCẢNH BÁO: MÃ BĂM KHÔNG HỢP LỆ\nHồ sơ đã bị sửa đổi trái phép hoặc giả mạo"]
+    subgraph Flow2 ["🔍 2. Quy Trình Xác Thực Liêm Chính Thực Địa (Verification Flow)"]
+        A2["📱 Mobile App (Tab Liêm chính)<br/>Cán bộ Hải quan GACC dán mã băm / quét QR"]:::blueBox
+        B2["🌐 API Gateway<br/>GET /integrity/verify/:hash"]:::blueBox
+        C2["⚙️ Backend Integrity Engine<br/>Tra cứu đối soát chuỗi băm Merkle Chain"]:::amberBox
+        E2["🟢 VERIFIED: TRUE<br/>Mã băm NGUYÊN VẸN & HỢP LỆ<br/>• Lô DURIAN-2024-912<br/>• 4 Khóa Phyto + Lab + CO + PKG"]:::greenBox
+        F2["🔴 VERIFIED: FALSE<br/>CẢNH BÁO: MÃ BĂM KHÔNG HỢP LỆ<br/>• Hồ sơ đã bị sửa đổi trái phép"]:::redBox
+
+        A2 --> B2 --> C2
+        C2 -->|✅ Tìm thấy & Khớp| E2
+        C2 -->|❌ Sai lệch / Không tồn tại| F2
     end
 ```
 
 > 🛡️ **Nguyên lý Mật mã học:**  
 > - **Chỉ băm Dấu vân tay Dữ liệu (Fingerprint Checksum):** Chuỗi băm SHA-256 đóng vai trò như "chữ ký kiểm toán kẹp chì", không lộ dữ liệu thô ra ngoài nhưng đảm bảo chỉ cần 1 dấu phẩy trong phiếu kiểm nghiệm Cadmium bị thay đổi, mã băm sẽ lập tức lệch và bị hệ thống từ chối thông quan.
+> - **Chuỗi Append-Only bất biến:** Mỗi bản ghi kiểm toán gắn chặt với `previousHash` của sự kiện trước đó theo cấu trúc Merkle Tree, ngăn ngừa mọi hành vi xóa hay ghi đè nhật ký từ database.
+
 ---
 
 ## 🏗️ Kiến Trúc Hệ Thống (System Architecture)
 
 ```mermaid
 graph TD
-    subgraph ClientLayer ["Mobile & Client Layer"]
-        MOB["Expo React Native (mobile/)"]
-        AuthG["Auth Gate & SecureStore"]
-        Nav["React Navigation v7 (5 Tabs)"]
+    classDef clientStyle fill:#1E3A8A,stroke:#3B82F6,stroke-width:2px,color:#FFFFFF;
+    classDef serviceStyle fill:#1E293B,stroke:#64748B,stroke-width:2px,color:#FFFFFF;
+    classDef aiStyle fill:#78350F,stroke:#F59E0B,stroke-width:2px,color:#FFFFFF;
+    classDef storageStyle fill:#064E3B,stroke:#10B981,stroke-width:2px,color:#FFFFFF;
+
+    subgraph ClientLayer ["📱 Mobile & Client Layer"]
+        MOB["Expo React Native (mobile/)"]:::clientStyle
+        AuthG["Auth Gate & SecureStore"]:::clientStyle
+        Nav["React Navigation v7 (5 Tabs)"]:::clientStyle
     end
 
-    subgraph ServiceLayer ["Service Layer (Backend API & Middleware)"]
-        API["Express.js Server (be/)"]
-        AuthM["Supabase JWT Auth Middleware"]
-        RBACM["Organization RBAC Middleware"]
-        ValM["Zod Request Validation"]
-        Ctrl["Domain Controllers (Products, Batches, Compliance, Integrity, Dashboard)"]
+    subgraph ServiceLayer ["⚙️ Service Layer (Backend API & Middleware)"]
+        API["Express.js Server (be/)"]:::serviceStyle
+        AuthM["Supabase JWT Auth Middleware"]:::serviceStyle
+        RBACM["Organization RBAC Middleware"]:::serviceStyle
+        ValM["Zod Request Validation"]:::serviceStyle
+        Ctrl["Domain Controllers (Products, Batches, Compliance, Integrity, Dashboard)"]:::serviceStyle
     end
 
-    subgraph IntelligenceEngine ["AI & Compliance Engine"]
-        RE["Deterministic Rule Engine\n(Cadmium limits, Phyto 14 days, HS code)"]
-        RAG["RAG Retrieval Engine"]
-        AI["Google Gemini 2.4 API"]
+    subgraph IntelligenceEngine ["🧠 AI & Compliance Engine"]
+        RE["Deterministic Rule Engine\n(Cadmium limits, Phyto 14 days, HS code)"]:::aiStyle
+        RAG["RAG Retrieval Engine"]:::aiStyle
+        AI["Google Gemini 2.4 API"]:::aiStyle
     end
 
-    subgraph DataStorage ["Data & Cryptography Layer"]
-        DB[(Supabase PostgreSQL)]
-        Prisma["Prisma ORM"]
-        Audit["SHA-256 Merkle Chain Audit Log"]
+    subgraph DataStorage ["💾 Data & Cryptography Layer"]
+        DB[(Supabase PostgreSQL)]:::storageStyle
+        Prisma["Prisma ORM"]:::storageStyle
+        Audit["SHA-256 Merkle Chain Audit Log"]:::storageStyle
     end
 
     MOB -->|HTTPS / REST API| API
