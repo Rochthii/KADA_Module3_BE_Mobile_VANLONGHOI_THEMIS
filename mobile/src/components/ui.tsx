@@ -63,14 +63,17 @@ export function ScreenShell({
   );
 }
 
+import { useLocalization } from '../locales';
+
 // ─── Error Banner ────────────────────────────────────────────────────────────
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useLocalization();
   return (
     <View style={eb.box}>
       <Text style={eb.msg}>{message}</Text>
       {onRetry && (
         <TouchableOpacity onPress={onRetry} style={eb.btn}>
-          <Text style={eb.btnText}>Thử lại</Text>
+          <Text style={eb.btnText}>{t.common.retry}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -95,22 +98,26 @@ export function EmptyState({ title, desc, action, onAction }: {
 }
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
-const BATCH_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  DRAFT:                { label: 'Nháp',             bg: C.slateBg,   text: C.slate   },
-  COLLECTING_DOCUMENTS: { label: 'Thu thập hồ sơ',   bg: C.amberBg,   text: C.amber   },
-  READY_FOR_CHECK:      { label: 'Sẵn sàng kiểm',    bg: C.blueBg,    text: C.blue    },
-  CHECKING:             { label: 'Đang kiểm định',   bg: C.amberBg,   text: C.amber   },
-  ACTION_REQUIRED:      { label: 'Cần xử lý',        bg: C.roseBg,    text: C.rose    },
-  COMPLIANT:            { label: 'Tuân thủ',          bg: C.emeraldBg, text: C.emerald },
-  NON_COMPLIANT:        { label: 'Vi phạm',           bg: C.roseBg,    text: C.rose    },
-  EXPIRED:              { label: 'Hết hạn',           bg: C.slateBg,   text: C.slate   },
+const BATCH_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+  DRAFT:                { bg: C.slateBg,   text: C.slate   },
+  COLLECTING_DOCUMENTS: { bg: C.amberBg,   text: C.amber   },
+  READY_FOR_CHECK:      { bg: C.blueBg,    text: C.blue    },
+  CHECKING:             { bg: C.amberBg,   text: C.amber   },
+  ACTION_REQUIRED:      { bg: C.roseBg,    text: C.rose    },
+  COMPLIANT:            { bg: C.emeraldBg, text: C.emerald },
+  NON_COMPLIANT:        { bg: C.roseBg,    text: C.rose    },
+  EXPIRED:              { bg: C.slateBg,   text: C.slate   },
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const cfg = BATCH_STATUS_MAP[status] ?? { label: status, bg: C.slateBg, text: C.slate };
+  const { t } = useLocalization();
+  const normalizedKey = status.toLowerCase() as keyof typeof t.batchStatuses;
+  const label = t.batchStatuses[normalizedKey] ?? status;
+  const styleCfg = BATCH_STATUS_STYLES[status.toUpperCase()] ?? { bg: C.slateBg, text: C.slate };
+
   return (
-    <View style={[bd.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[bd.text, { color: cfg.text }]}>{cfg.label}</Text>
+    <View style={[bd.badge, { backgroundColor: styleCfg.bg }]}>
+      <Text style={[bd.text, { color: styleCfg.text }]}>{label}</Text>
     </View>
   );
 }

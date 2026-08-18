@@ -2,12 +2,13 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   TouchableOpacity, RefreshControl, ScrollView,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../lib/api';
 import { Card, ErrorBanner, EmptyState, Skeleton } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
+import { useLocalization } from '../locales';
 
 interface CheckItem {
   id: string;
@@ -21,8 +22,6 @@ interface CheckItem {
   createdAt: string;
   completedAt?: string;
 }
-
-import { strings } from '../locales';
 
 interface ChatMsg {
   id: string;
@@ -49,10 +48,9 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled:  C.slate,
 };
 
-const QUICK_PROMPTS = strings.quickPrompts;
-
 export function ChecksScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useLocalization();
   const [activeTab, setActiveTab] = useState<'advisor' | 'history'>('advisor');
 
   // History state
@@ -66,8 +64,8 @@ export function ChecksScreen() {
     {
       id: '1',
       sender: 'ai',
-      text: 'Xin chào, tôi là AI Themis Navigator. Tôi có thể hỗ trợ giải đáp nhanh mọi quy chuẩn kỹ thuật xuất khẩu sầu riêng sang Trung Quốc (GACC Protocol 2024, Lệnh 248/249, Giới hạn Cadmium GB 2762).',
-      time: 'Vừa xong',
+      text: t.checks.advisor.welcome,
+      time: '00:00',
     },
   ]);
   const [inputMsg, setInputMsg] = useState('');
@@ -81,12 +79,12 @@ export function ChecksScreen() {
       const list = (res as any)?.data ?? res ?? [];
       setChecks(Array.isArray(list) ? list : []);
     } catch (e: any) {
-      setError(e?.message ?? 'Không tải được lịch sử kiểm định.');
+      setError(e?.message ?? t.common.error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchChecks(); }, [fetchChecks]);
 
@@ -111,16 +109,16 @@ export function ChecksScreen() {
       let replyText = '';
       const q = textToSend.toLowerCase();
 
-      if (q.includes('cadmium') || q.includes('kim loại')) {
-        replyText = 'Theo tiêu chuẩn Hải quan Trung Quốc GB 2762-2022: Ngưỡng thôi nhiễm Cadmium tối đa cho sầu riêng tươi là ≤ 0.05 mg/kg. Lô hàng vượt quá ngưỡng này sẽ bị cảnh báo vi phạm nghiêm trọng và từ chối thông quan.';
-      } else if (q.includes('phyto') || q.includes('kiểm dịch')) {
-        replyText = 'Giấy chứng nhận Kiểm dịch Thực vật (Phytosanitary Certificate) do Chi cục Kiểm dịch TV cấp theo Nghị định thư GACC có hiệu lực tối đa 14 ngày kể từ ngày cấp. Phải hoàn tất thông quan trước thời hạn này.';
-      } else if (q.includes('4 khóa') || q.includes('chứng từ')) {
-        replyText = 'Hệ sinh thái 4 Khóa Tuân thủ sống còn gồm: 1. Kiểm dịch TV Phyto; 2. Phiếu Lab Cadmium GB 2762; 3. Giấy chứng nhận C/O Form E; 4. Packing List & Biên bản xử lý dịch hại cơ sở PHC.';
+      if (q.includes('cadmium') || q.includes('kim loại') || q.includes('镉')) {
+        replyText = `${t.dashboard.radar.cadmiumLabel}: ${t.dashboard.radar.cadmiumDesc}`;
+      } else if (q.includes('phyto') || q.includes('kiểm dịch') || q.includes('植检')) {
+        replyText = `${t.dashboard.radar.phytoLabel}: ${t.dashboard.radar.phytoDesc}`;
+      } else if (q.includes('4 khóa') || q.includes('chứng từ') || q.includes('4项') || q.includes('keys')) {
+        replyText = `${t.products.fourKeysModal.title}: 1. ${t.docKeys.phyto.label}; 2. ${t.docKeys.lab.label}; 3. ${t.docKeys.co.label}; 4. ${t.docKeys.pkg.label}.`;
       } else if (q.includes('248') || q.includes('cifer') || q.includes('puc')) {
-        replyText = 'Theo Lệnh 248/249 của Tổng cục Hải quan Trung Quốc GACC, doanh nghiệp phải đăng ký mã số vùng trồng PUC và cơ sở đóng gói PHC được Tổng cục Hải quan TQ phê duyệt trên hệ thống CIFER.';
+        replyText = `${t.dashboard.radar.ciferLabel}: ${t.dashboard.radar.ciferDesc}`;
       } else {
-        replyText = `Hồ sơ "${textToSend}" đã được đối chiếu với cơ sở dữ liệu Nghị định thư GACC 2024. Bạn hãy vào tab "Lô hàng 4 Khóa" để nạp chứng thư thực địa và bấm quét thẩm định tuân thủ tự động.`;
+        replyText = `${t.settings.standardValue} (HS ${t.settings.hsCodeValue}): ${textToSend} — ${t.products.fourKeysModal.readyBanner}`;
       }
 
       const aiMsg: ChatMsg = {
@@ -140,8 +138,8 @@ export function ChecksScreen() {
       {/* Header */}
       <View style={[s.header, { paddingTop: Math.max(insets.top + 8, 20) }]}>
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle}>Tư vấn AI Tuân thủ GACC</Text>
-          <Text style={s.headerSub}>Trợ lý thực địa & Lịch sử thẩm định lô hàng</Text>
+          <Text style={s.headerTitle}>{t.checks.title}</Text>
+          <Text style={s.headerSub}>{t.checks.subtitle}</Text>
         </View>
       </View>
 
@@ -153,7 +151,7 @@ export function ChecksScreen() {
           activeOpacity={0.8}
         >
           <Text style={[s.tabText, activeTab === 'advisor' && s.tabTextActive]}>
-            TRỢ LÝ AI THỰC ĐỊA
+            {t.checks.tabAdvisor}
           </Text>
         </TouchableOpacity>
 
@@ -163,7 +161,7 @@ export function ChecksScreen() {
           activeOpacity={0.8}
         >
           <Text style={[s.tabText, activeTab === 'history' && s.tabTextActive]}>
-            LỊCH SỬ THẨM ĐỊNH ({checks.length})
+            {t.checks.tabHistory} ({checks.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -174,7 +172,7 @@ export function ChecksScreen() {
           {/* Quick Prompts */}
           <View style={s.quickPromptsBar}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 14 }}>
-              {QUICK_PROMPTS.map((p, idx) => (
+              {t.quickPrompts.map((p: string, idx: number) => (
                 <TouchableOpacity key={idx} style={s.quickChip} onPress={() => handleSendMessage(p)}>
                   <Text style={s.quickChipText}>{p}</Text>
                 </TouchableOpacity>
@@ -182,45 +180,78 @@ export function ChecksScreen() {
             </ScrollView>
           </View>
 
-          {/* Chat Messages */}
-          <ScrollView contentContainerStyle={s.chatScroll} showsVerticalScrollIndicator={false}>
-            {messages.map((m) => {
-              const isAi = m.sender === 'ai';
-              return (
-                <View key={m.id} style={[s.msgWrapper, isAi ? s.aiMsgWrapper : s.userMsgWrapper]}>
-                  <View style={[s.msgBox, isAi ? s.aiMsgBox : s.userMsgBox]}>
-                    <Text style={[s.msgSender, isAi ? s.aiSenderText : s.userSenderText]}>
-                      {isAi ? 'THEMIS AI NAVIGATOR' : 'BẠN'}
-                    </Text>
-                    <Text style={[s.msgText, isAi ? s.aiMsgText : s.userMsgText]}>{m.text}</Text>
-                    <Text style={[s.msgTime, isAi ? s.aiTimeText : s.userTimeText]}>{m.time}</Text>
-                  </View>
+          {/* Messages */}
+          <ScrollView contentContainerStyle={s.chatScroll}>
+            {messages.map((m) => (
+              <View
+                key={m.id}
+                style={[
+                  s.msgWrapper,
+                  m.sender === 'ai' ? s.aiMsgWrapper : s.userMsgWrapper,
+                ]}
+              >
+                <View
+                  style={[
+                    s.msgBox,
+                    m.sender === 'ai' ? s.aiMsgBox : s.userMsgBox,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.msgSender,
+                      m.sender === 'ai' ? s.aiSenderText : s.userSenderText,
+                    ]}
+                  >
+                    {m.sender === 'ai' ? t.checks.advisor.headerBadge : 'YOU'}
+                  </Text>
+                  <Text
+                    style={[
+                      s.msgText,
+                      m.sender === 'ai' ? s.aiMsgText : s.userMsgText,
+                    ]}
+                  >
+                    {m.text}
+                  </Text>
+                  <Text style={[s.msgTime, { color: m.sender === 'ai' ? C.textMuted : 'rgba(255,255,255,0.6)' }]}>
+                    {m.time}
+                  </Text>
                 </View>
-              );
-            })}
+              </View>
+            ))}
 
             {isAiThinking && (
               <View style={[s.msgWrapper, s.aiMsgWrapper]}>
-                <View style={[s.msgBox, s.aiMsgBox, { paddingVertical: 10 }]}>
-                  <Text style={s.aiThinkingText}>AI đang phân tích dữ liệu pháp lý GACC...</Text>
+                <View style={[s.msgBox, s.aiMsgBox]}>
+                  <Text style={[s.msgSender, s.aiSenderText]}>{t.checks.advisor.headerBadge}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 }}>
+                    <ActivityIndicator size="small" color={C.gold} />
+                    <Text style={{ fontSize: FONT_SIZE.xs, color: C.textSecondary, fontStyle: 'italic' }}>
+                      {t.checks.advisor.thinking}
+                    </Text>
+                  </View>
                 </View>
               </View>
             )}
           </ScrollView>
 
-          {/* Chat Input */}
-          <View style={s.chatInputBar}>
+          {/* Input Box */}
+          <View style={[s.chatInputBar, { paddingBottom: Math.max(insets.bottom + 8, 14) }]}>
             <TextInput
               style={s.chatInput}
               value={inputMsg}
               onChangeText={setInputMsg}
-              placeholder="Nhập câu hỏi pháp lý / quy chuẩn GACC..."
+              placeholder={t.checks.advisor.inputPlaceholder}
               placeholderTextColor={C.textMuted}
-              returnKeyType="send"
               onSubmitEditing={() => handleSendMessage()}
+              returnKeyType="send"
             />
-            <TouchableOpacity style={s.sendBtn} onPress={() => handleSendMessage()} activeOpacity={0.8}>
-              <Text style={s.sendBtnText}>GỬI</Text>
+            <TouchableOpacity
+              style={[s.sendBtn, !inputMsg.trim() && { opacity: 0.5 }]}
+              onPress={() => handleSendMessage()}
+              disabled={!inputMsg.trim() || isAiThinking}
+              activeOpacity={0.8}
+            >
+              <Text style={s.sendBtnText}>{t.checks.advisor.sendBtn}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -257,9 +288,10 @@ export function ChecksScreen() {
 
 // ─── Memoized Check Card ─────────────────────────────────────────────────────
 const CheckCardMemo = React.memo(function CheckCard({ check }: { check: CheckItem }) {
-  const statusLabel = (strings.checkStatuses as Record<string, string>)[check.status] ?? check.status;
+  const { t } = useLocalization();
+  const statusLabel = (t.checkStatuses as Record<string, string>)[check.status] ?? check.status;
   const statusColor = STATUS_COLORS[check.status] ?? C.slate;
-  const resultLabel = check.result ? (strings.checkResults as Record<string, string>)[check.result] : null;
+  const resultLabel = check.result ? (t.checkResults as Record<string, string>)[check.result] : null;
   const resultStyle = check.result ? RESULT_STYLES[check.result] : null;
   const date = new Date(check.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 

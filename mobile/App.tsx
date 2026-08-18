@@ -61,9 +61,12 @@ function TabIcon({ name, focused }: { name: keyof RootTabParamList; focused: boo
   );
 }
 
+import { useLocalization } from './src/locales';
+
 // ─── Main App ────────────────────────────────────────────────────────────────
 export default function App() {
   const [authState, setAuthState] = useState<'loading' | 'logged_in' | 'logged_out'>('loading');
+  const { t } = useLocalization();
 
   useEffect(() => {
     let mounted = true;
@@ -127,30 +130,30 @@ export default function App() {
             <Tab.Screen
               name="DIEU_HANH"
               component={DashboardScreen}
-              options={{ tabBarLabel: 'ĐIỀU HÀNH' }}
+              options={{ tabBarLabel: t.tabs.dashboard.toUpperCase() }}
             />
 
             <Tab.Screen
               name="SAN_PHAM"
               component={ProductsScreen}
-              options={{ tabBarLabel: 'SẢN PHẨM' }}
+              options={{ tabBarLabel: t.tabs.products.toUpperCase() }}
             />
 
             <Tab.Screen
               name="TU_VAN"
               component={ChecksScreen}
-              options={{ tabBarLabel: 'TƯ VẤN AI' }}
+              options={{ tabBarLabel: t.tabs.checks.toUpperCase() }}
             />
 
             <Tab.Screen
               name="LIEM_CHINH"
               component={IntegrityScreen}
-              options={{ tabBarLabel: 'LIÊM CHÍNH' }}
+              options={{ tabBarLabel: t.tabs.integrity.toUpperCase() }}
             />
 
             <Tab.Screen
               name="CAI_DAT"
-              options={{ tabBarLabel: 'CÀI ĐẶT' }}
+              options={{ tabBarLabel: t.tabs.settings.toUpperCase() }}
             >
               {() => <SettingsScreen onLogout={() => setAuthState('logged_out')} />}
             </Tab.Screen>

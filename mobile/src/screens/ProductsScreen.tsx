@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../lib/api';
 import { Card, StatusBadge, KeyBadge, ErrorBanner, EmptyState, Skeleton, PrimaryButton } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
+import { useLocalization } from '../locales';
 
 interface ProductItem {
   id: string;
@@ -34,6 +35,7 @@ interface BatchItem {
 
 export function ProductsScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useLocalization();
   const [activeTab, setActiveTab] = useState<'products' | 'batches'>('products');
 
   // Products & Batches state
@@ -77,19 +79,19 @@ export function ProductsScreen() {
       setProducts(Array.isArray(pList) ? pList : []);
       setBatches(Array.isArray(bList) ? bList : []);
     } catch (e: any) {
-      setError(e?.message ?? 'Không tải được dữ liệu sản phẩm và lô hàng.');
+      setError(e?.message ?? t.common.error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   // ─── Create Product (Real API) ──────────────────────────────────────────────
   async function handleCreateProduct() {
     if (!newProdName.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập tên sản phẩm.');
+      Alert.alert(t.common.error, t.products.addProductModal.validationError);
       return;
     }
     setSubmittingProd(true);
@@ -104,10 +106,10 @@ export function ProductsScreen() {
       setShowAddProductModal(false);
       setNewProdName('');
       setNewProdOrigin('');
-      Alert.alert('Thành công', 'Đã thêm sản phẩm xuất khẩu mới vào cơ sở dữ liệu!');
+      Alert.alert(t.common.success, t.products.addProductModal.createSuccess);
       loadData(true);
     } catch (e: any) {
-      Alert.alert('Lỗi tạo sản phẩm', e?.message ?? 'Không thể tạo sản phẩm.');
+      Alert.alert(t.common.error, e?.message ?? t.common.error);
     } finally {
       setSubmittingProd(false);
     }
@@ -116,7 +118,7 @@ export function ProductsScreen() {
   // ─── Create Batch (Real API) ────────────────────────────────────────────────
   async function handleCreateBatch() {
     if (!newBatchCode.trim() || !newBatchProdId) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập Mã lô hàng và chọn Sản phẩm.');
+      Alert.alert(t.common.error, t.products.addBatchModal.validationError);
       return;
     }
     setSubmittingBatch(true);
@@ -131,10 +133,10 @@ export function ProductsScreen() {
       setShowAddBatchModal(false);
       setNewBatchCode('');
       setNewBatchQty('');
-      Alert.alert('Thành công', 'Đã tạo Lô hàng mới và khởi tạo 4 Khóa hồ sơ thông quan!');
+      Alert.alert(t.common.success, t.products.addBatchModal.createSuccess);
       loadData(true);
     } catch (e: any) {
-      Alert.alert('Lỗi tạo lô hàng', e?.message ?? 'Không thể tạo lô hàng.');
+      Alert.alert(t.common.error, e?.message ?? t.common.error);
     } finally {
       setSubmittingBatch(false);
     }
@@ -151,31 +153,31 @@ export function ProductsScreen() {
         fileSize: 1250000,
         mimeType: 'application/pdf',
       });
-      Alert.alert('Nạp thành công', `Đã ghi nhận ${label} vào hồ sơ lô hàng!`);
+      Alert.alert(t.common.success, `${label}: ${t.products.fourKeysModal.docUploadedSuccess}`);
       loadData(true);
       setSelectedBatchForDocs(null);
     } catch (e: any) {
-      Alert.alert('Lỗi nạp chứng từ', e?.message ?? 'Không thể lưu chứng từ.');
+      Alert.alert(t.common.error, e?.message ?? t.common.error);
     }
   }
 
   // ─── Delete Product (Real API) ──────────────────────────────────────────────
   function handleDeleteProduct(prodId: string, name: string) {
     Alert.alert(
-      'Xóa sản phẩm',
-      `Bạn có chắc chắn muốn xóa sản phẩm "${name}"? Hành động này sẽ được ghi vào Audit Log.`,
+      t.products.productCard.deleteConfirmTitle,
+      `${t.products.productCard.deleteConfirmMsg} ("${name}")`,
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t.common.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               await api.delete(`/products/${prodId}`);
-              Alert.alert('Đã xóa', 'Đã xóa sản phẩm khỏi hệ thống.');
+              Alert.alert(t.common.success, t.products.productCard.deleteSuccess);
               loadData(true);
             } catch (err: any) {
-              Alert.alert('Lỗi xóa sản phẩm', err?.message ?? 'Không thể xóa sản phẩm.');
+              Alert.alert(t.common.error, err?.message ?? t.common.error);
             }
           },
         },
@@ -201,8 +203,8 @@ export function ProductsScreen() {
       {/* Header */}
       <View style={[s.header, { paddingTop: Math.max(insets.top + 8, 20) }]}>
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle}>Sản phẩm & 4 Khóa Lô hàng</Text>
-          <Text style={s.headerSub}>Quản lý danh mục & Hồ sơ thông quan GACC</Text>
+          <Text style={s.headerTitle}>{t.products.title}</Text>
+          <Text style={s.headerSub}>{t.products.subtitle}</Text>
         </View>
       </View>
 
@@ -214,7 +216,7 @@ export function ProductsScreen() {
           activeOpacity={0.8}
         >
           <Text style={[s.tabText, activeTab === 'products' && s.tabTextActive]}>
-            SẢN PHẨM ({products.length})
+            {t.products.tabProducts} ({products.length})
           </Text>
         </TouchableOpacity>
 
@@ -224,7 +226,7 @@ export function ProductsScreen() {
           activeOpacity={0.8}
         >
           <Text style={[s.tabText, activeTab === 'batches' && s.tabTextActive]}>
-            LÔ HÀNG 4 KHÓA ({batches.length})
+            {t.products.tabBatches} ({batches.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -236,7 +238,7 @@ export function ProductsScreen() {
             style={s.searchInput}
             value={search}
             onChangeText={setSearch}
-            placeholder={activeTab === 'products' ? 'Tìm sản phẩm, mã HS...' : 'Tìm theo mã lô hàng...'}
+            placeholder={t.products.searchPlaceholder}
             placeholderTextColor={C.textMuted}
             returnKeyType="search"
           />
@@ -247,7 +249,7 @@ export function ProductsScreen() {
           onPress={() => (activeTab === 'products' ? setShowAddProductModal(true) : setShowAddBatchModal(true))}
           activeOpacity={0.8}
         >
-          <Text style={s.addButtonText}>+ {activeTab === 'products' ? 'SẢN PHẨM' : 'TẠO LÔ'}</Text>
+          <Text style={s.addButtonText}>{activeTab === 'products' ? t.products.addProductBtn : t.products.addBatchBtn}</Text>
         </TouchableOpacity>
       </View>
 
@@ -302,47 +304,47 @@ export function ProductsScreen() {
       <Modal visible={showAddProductModal} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalOverlay}>
           <View style={s.modalBox}>
-            <Text style={s.modalTitle}>Thêm Sản phẩm Xuất khẩu</Text>
+            <Text style={s.modalTitle}>{t.products.addProductModal.title}</Text>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Tên sản phẩm *</Text>
+              <Text style={s.fieldLabel}>{t.products.addProductModal.nameLabel}</Text>
               <TextInput
                 style={s.input}
                 value={newProdName}
                 onChangeText={setNewProdName}
-                placeholder="VD: Sầu riêng Ri6 Bến Tre"
+                placeholder={t.products.addProductModal.namePlaceholder}
                 placeholderTextColor={C.textMuted}
               />
             </View>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Mã HS GACC</Text>
+              <Text style={s.fieldLabel}>{t.products.addProductModal.hsLabel}</Text>
               <TextInput
                 style={s.input}
                 value={newProdHs}
                 onChangeText={setNewProdHs}
-                placeholder="0810.60.00"
+                placeholder={t.products.addProductModal.hsPlaceholder}
                 placeholderTextColor={C.textMuted}
               />
             </View>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Vùng trồng (Mã PUC)</Text>
+              <Text style={s.fieldLabel}>{t.products.addProductModal.pucLabel}</Text>
               <TextInput
                 style={s.input}
                 value={newProdOrigin}
                 onChangeText={setNewProdOrigin}
-                placeholder="VD: Tiền Giang (Mã PUC: VN-TGOR-0042)"
+                placeholder={t.products.addProductModal.pucPlaceholder}
                 placeholderTextColor={C.textMuted}
               />
             </View>
 
             <View style={s.modalActions}>
               <TouchableOpacity style={s.cancelBtn} onPress={() => setShowAddProductModal(false)}>
-                <Text style={s.cancelBtnText}>Đóng</Text>
+                <Text style={s.cancelBtnText}>{t.common.close}</Text>
               </TouchableOpacity>
               <View style={{ flex: 1 }}>
-                <PrimaryButton label="LƯU SẢN PHẨM" onPress={handleCreateProduct} loading={submittingProd} />
+                <PrimaryButton label={t.products.addProductModal.createBtn} onPress={handleCreateProduct} loading={submittingProd} />
               </View>
             </View>
           </View>
@@ -353,22 +355,22 @@ export function ProductsScreen() {
       <Modal visible={showAddBatchModal} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalOverlay}>
           <View style={s.modalBox}>
-            <Text style={s.modalTitle}>Khởi tạo Lô hàng Xuất khẩu</Text>
+            <Text style={s.modalTitle}>{t.products.addBatchModal.title}</Text>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Mã Lô hàng *</Text>
+              <Text style={s.fieldLabel}>{t.products.addBatchModal.batchCodeLabel}</Text>
               <TextInput
                 style={s.input}
                 value={newBatchCode}
                 onChangeText={setNewBatchCode}
-                placeholder="VD: DURIAN-2026-901"
+                placeholder={t.products.addBatchModal.batchCodePlaceholder}
                 placeholderTextColor={C.textMuted}
                 autoCapitalize="characters"
               />
             </View>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Chọn Sản phẩm *</Text>
+              <Text style={s.fieldLabel}>{t.products.addBatchModal.selectProductLabel}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', gap: 6, marginVertical: 4 }}>
                 {products.map((p) => {
                   const isSel = newBatchProdId === p.id;
@@ -386,12 +388,12 @@ export function ProductsScreen() {
             </View>
 
             <View style={s.field}>
-              <Text style={s.fieldLabel}>Khối lượng (Tấn)</Text>
+              <Text style={s.fieldLabel}>{t.products.addBatchModal.quantityLabel}</Text>
               <TextInput
                 style={s.input}
                 value={newBatchQty}
                 onChangeText={setNewBatchQty}
-                placeholder="20"
+                placeholder={t.products.addBatchModal.quantityPlaceholder}
                 keyboardType="numeric"
                 placeholderTextColor={C.textMuted}
               />
@@ -399,10 +401,10 @@ export function ProductsScreen() {
 
             <View style={s.modalActions}>
               <TouchableOpacity style={s.cancelBtn} onPress={() => setShowAddBatchModal(false)}>
-                <Text style={s.cancelBtnText}>Đóng</Text>
+                <Text style={s.cancelBtnText}>{t.common.close}</Text>
               </TouchableOpacity>
               <View style={{ flex: 1 }}>
-                <PrimaryButton label="TẠO LÔ HÀNG" onPress={handleCreateBatch} loading={submittingBatch} />
+                <PrimaryButton label={t.products.addBatchModal.createBtn} onPress={handleCreateBatch} loading={submittingBatch} />
               </View>
             </View>
           </View>
@@ -413,34 +415,34 @@ export function ProductsScreen() {
       <Modal visible={!!selectedBatchForDocs} animationType="slide" transparent>
         <View style={s.modalOverlay}>
           <View style={s.modalBox}>
-            <Text style={s.modalTitle}>4 Khóa Hồ sơ: {selectedBatchForDocs?.batchCode}</Text>
-            <Text style={s.modalSub}>Nhấn vào từng khóa để nạp số hóa chứng thư thực địa:</Text>
+            <Text style={s.modalTitle}>{t.products.fourKeysModal.title}: {selectedBatchForDocs?.batchCode}</Text>
+            <Text style={s.modalSub}>{t.products.fourKeysModal.missingBanner}</Text>
 
             <View style={s.docKeysList}>
               <DocKeyUploadRow
-                label="1. Kiểm dịch TV Phyto"
-                desc="Chứng nhận kiểm dịch đạt chuẩn GACC"
-                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'PHYTO', 'Kiểm dịch TV Phyto')}
+                label={t.docKeys.phyto.label}
+                desc={t.docKeys.phyto.desc}
+                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'PHYTO', t.docKeys.phyto.label)}
               />
               <DocKeyUploadRow
-                label="2. Phiếu Lab Cadmium"
-                desc="Đạt giới hạn Cadmium ≤ 0.05 mg/kg (GB 2762)"
-                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'LAB_REPORT', 'Phiếu Lab Cadmium')}
+                label={t.docKeys.lab.label}
+                desc={t.docKeys.lab.desc}
+                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'LAB_REPORT', t.docKeys.lab.label)}
               />
               <DocKeyUploadRow
-                label="3. Chứng nhận C/O Form E"
-                desc="Xuất xứ ASEAN - Trung Quốc"
-                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'CO', 'Chứng nhận C/O Form E')}
+                label={t.docKeys.co.label}
+                desc={t.docKeys.co.desc}
+                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'CO', t.docKeys.co.label)}
               />
               <DocKeyUploadRow
-                label="4. Packing List & Khử trùng"
-                desc="Bảng kê chi tiết đóng gói cơ sở PHC"
-                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'PACKING_LIST', 'Packing List')}
+                label={t.docKeys.pkg.label}
+                desc={t.docKeys.pkg.desc}
+                onUpload={() => handleUploadKeyDoc(selectedBatchForDocs!.id, 'PACKING_LIST', t.docKeys.pkg.label)}
               />
             </View>
 
             <TouchableOpacity style={[s.cancelBtn, { marginTop: 12 }]} onPress={() => setSelectedBatchForDocs(null)}>
-              <Text style={s.cancelBtnText}>Hoàn tất</Text>
+              <Text style={s.cancelBtnText}>{t.common.close}</Text>
             </TouchableOpacity>
           </View>
         </View>

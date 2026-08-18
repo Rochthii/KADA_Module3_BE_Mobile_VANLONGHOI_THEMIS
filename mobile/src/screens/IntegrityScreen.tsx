@@ -52,8 +52,11 @@ const ACTION_COLORS: Record<string, string> = {
   'user.login_success':C.blue,
 };
 
+import { useLocalization } from '../locales';
+
 export function IntegrityScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useLocalization();
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [stats, setStats] = useState<IntegrityStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,19 +80,19 @@ export function IntegrityScreen() {
       setLogs(Array.isArray(list) ? list : []);
       if (statsRes) setStats(statsRes);
     } catch (e: any) {
-      setError(e?.message ?? 'Không tải được nhật ký kiểm toán.');
+      setError(e?.message ?? t.common.error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchIntegrityData(); }, [fetchIntegrityData]);
 
   // ─── Verify SHA-256 Hash Tool ──────────────────────────────────────────────
   async function handleVerifyHash() {
     if (!inputHash.trim()) {
-      Alert.alert('Chưa nhập mã băm', 'Vui lòng nhập chuỗi băm SHA-256 (64 ký tự hex).');
+      Alert.alert(t.common.error, t.integrity.verifyTool.emptyHashAlert);
       return;
     }
     setVerifying(true);
@@ -100,7 +103,7 @@ export function IntegrityScreen() {
     } catch (e: any) {
       setVerifyResult({
         verified: false,
-        message: e?.message ?? 'Không thể kiểm tra mã băm SHA-256.',
+        message: e?.message ?? t.common.error,
       });
     } finally {
       setVerifying(false);
@@ -118,8 +121,8 @@ export function IntegrityScreen() {
       {/* Header */}
       <View style={[s.header, { paddingTop: Math.max(insets.top + 8, 20) }]}>
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle}>Giám sát Liêm chính & SHA-256</Text>
-          <Text style={s.headerSub}>Chuỗi băm Merkle Chain bất biến chống gian lận</Text>
+          <Text style={s.headerTitle}>{t.integrity.title}</Text>
+          <Text style={s.headerSub}>{t.integrity.subtitle}</Text>
         </View>
       </View>
 
@@ -134,33 +137,33 @@ export function IntegrityScreen() {
             {/* Stats Bar */}
             <View style={s.statsContainer}>
               <View style={s.statCard}>
-                <Text style={s.statLabel}>Bảo vệ Toàn vẹn</Text>
+                <Text style={s.statLabel}>{t.integrity.stats.merkleStatus}</Text>
                 <Text style={[s.statVal, { color: C.emerald }]}>100%</Text>
-                <Text style={s.statSub}>SHA-256 Active</Text>
+                <Text style={s.statSub}>{t.integrity.stats.merkleActive}</Text>
               </View>
               <View style={s.statCard}>
-                <Text style={s.statLabel}>Tổng Bản ghi Audit</Text>
+                <Text style={s.statLabel}>{t.integrity.stats.totalLogs}</Text>
                 <Text style={[s.statVal, { color: C.navyMid }]}>{stats?.totalLogs ?? logs.length}</Text>
                 <Text style={s.statSub}>Append-only</Text>
               </View>
               <View style={s.statCard}>
-                <Text style={s.statLabel}>Báo cáo Niêm phong</Text>
+                <Text style={s.statLabel}>{t.integrity.stats.verifiedHashes}</Text>
                 <Text style={[s.statVal, { color: C.amber }]}>{stats?.sealedReportsCount ?? 1}</Text>
-                <Text style={s.statSub}>Kẹp chì số hóa</Text>
+                <Text style={s.statSub}>SHA-256 Merkle</Text>
               </View>
             </View>
 
-            {/* SHA-256 Verification Tool (Parity with Web) */}
+            {/* SHA-256 Verification Tool */}
             <Card style={s.verifyBox}>
-              <Text style={s.verifyTitle}>Công cụ Xác thực Mã băm SHA-256</Text>
-              <Text style={s.verifyDesc}>Tra cứu trực tiếp tính nguyên vẹn của Báo cáo & Hồ sơ thông quan GACC:</Text>
+              <Text style={s.verifyTitle}>{t.integrity.verifyTool.title}</Text>
+              <Text style={s.verifyDesc}>{t.integrity.stats.title}</Text>
 
               <View style={s.hashInputRow}>
                 <TextInput
                   style={s.hashInput}
                   value={inputHash}
                   onChangeText={setInputHash}
-                  placeholder="Dán mã băm SHA-256 (VD: e3b0c44298fc1c149...)"
+                  placeholder={t.integrity.verifyTool.inputPlaceholder}
                   placeholderTextColor={C.textMuted}
                   autoCapitalize="none"
                 />
@@ -173,7 +176,7 @@ export function IntegrityScreen() {
                   {verifying ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={s.verifyBtnText}>KIỂM TRA</Text>
+                    <Text style={s.verifyBtnText}>{t.integrity.verifyTool.verifyBtn}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -181,19 +184,19 @@ export function IntegrityScreen() {
               {verifyResult && (
                 <View style={[s.verifyResultCard, { backgroundColor: verifyResult.verified ? C.emeraldBg : C.roseBg, borderColor: verifyResult.verified ? C.emerald : C.rose }]}>
                   <Text style={[s.verifyResultTitle, { color: verifyResult.verified ? C.emerald : C.rose }]}>
-                    {verifyResult.verified ? 'MÃ BĂM NGUYÊN VẸN & HỢP LỆ' : 'CẢNH BÁO: MÃ BĂM KHÔNG HỢP LỆ'}
+                    {verifyResult.verified ? t.integrity.verifyTool.successTitle : t.integrity.verifyTool.failedTitle}
                   </Text>
                   <Text style={s.verifyResultMsg}>{verifyResult.message}</Text>
                   {verifyResult.batchCode && (
-                    <Text style={s.verifyResultDetail}>Lô hàng: {verifyResult.batchCode} — {verifyResult.productName}</Text>
+                    <Text style={s.verifyResultDetail}>{t.products.batchCard.codePrefix} {verifyResult.batchCode} — {verifyResult.productName}</Text>
                   )}
                 </View>
               )}
             </Card>
 
             <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Dòng thời gian Nhật ký Kiểm toán</Text>
-              <Text style={s.sectionHint}>Ghi nhận bất biến</Text>
+              <Text style={s.sectionTitle}>{t.integrity.timeline.title}</Text>
+              <Text style={s.sectionHint}>{t.integrity.timeline.subtitle}</Text>
             </View>
           </View>
         }
@@ -204,7 +207,7 @@ export function IntegrityScreen() {
               <Skeleton height={80} />
             </View>
           ) : (
-            <EmptyState title="Chưa có nhật ký kiểm toán" desc="Mọi thao tác thay đổi dữ liệu sẽ được ghi nhận tại đây." />
+            <EmptyState title={t.integrity.timeline.emptyTitle} desc={t.integrity.timeline.emptyDesc} />
           )
         }
         windowSize={10}
@@ -216,7 +219,8 @@ export function IntegrityScreen() {
 
 // ─── Memoized Audit Row ──────────────────────────────────────────────────────
 const AuditRowMemo = React.memo(function AuditRow({ entry, isFirst }: { entry: AuditEntry; isFirst: boolean }) {
-  const label = (strings.actions as Record<string, string>)[entry.action] ?? entry.action;
+  const { t } = useLocalization();
+  const label = (t.actions as Record<string, string>)[entry.action] ?? entry.action;
   const color = ACTION_COLORS[entry.action] ?? C.slate;
   const date = new Date(entry.createdAt);
   const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });

@@ -4,7 +4,7 @@ import { api, clearAuth, getToken } from '../lib/api';
 import { ScreenShell, Card, ErrorBanner } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
 import { activeEnv } from '../config/env';
-import { strings } from '../locales';
+import { useLocalization, LANGUAGE_OPTIONS, SupportedLanguage } from '../locales';
 
 interface UserProfile {
   id: string;
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function SettingsScreen({ onLogout }: Props) {
+  const { t, lang, setLanguage } = useLocalization();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,22 +42,22 @@ export function SettingsScreen({ onLogout }: Props) {
         });
       }
     } catch (e: any) {
-      setError(e?.message ?? 'Không tải được thông tin tài khoản.');
+      setError(e?.message ?? t.common.error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   function handleLogout() {
     Alert.alert(
-      'Đăng xuất',
-      'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?',
+      t.settings.logoutConfirmTitle,
+      t.settings.logoutConfirmMsg,
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Đăng xuất',
+          text: t.settings.logoutConfirmAction,
           style: 'destructive',
           onPress: async () => {
             await clearAuth();
@@ -67,12 +68,12 @@ export function SettingsScreen({ onLogout }: Props) {
     );
   }
 
-  const roleLabel = profile?.role ? (strings.roles as Record<string, string>)[profile.role] ?? profile.role : '—';
+  const roleLabel = profile?.role ? (t.roles as Record<string, string>)[profile.role] ?? profile.role : '—';
 
   return (
     <ScreenShell
-      title="Cài đặt & Tài khoản"
-      subtitle="Themis LexiGuard — Phân quyền RBAC"
+      title={t.settings.title}
+      subtitle={t.settings.subtitle}
       loading={loading}
     >
       {error && <ErrorBanner message={error} onRetry={fetchProfile} />}
@@ -88,16 +89,37 @@ export function SettingsScreen({ onLogout }: Props) {
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.name}>{profile.fullName ?? 'Chưa cập nhật'}</Text>
+                <Text style={s.name}>{profile.fullName ?? 'Chăm Rốch Thi'}</Text>
                 <Text style={s.email}>{profile.email}</Text>
               </View>
+            </View>
+          </Card>
+
+          {/* Language Switcher */}
+          <Card>
+            <Text style={s.sectionLabel}>{t.settings.languageSection}</Text>
+            <View style={s.langRow}>
+              {LANGUAGE_OPTIONS.map((opt) => {
+                const isSel = lang === opt.code;
+                return (
+                  <TouchableOpacity
+                    key={opt.code}
+                    style={[s.langChip, isSel && s.langChipActive]}
+                    onPress={() => setLanguage(opt.code)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={s.langFlag}>{opt.flag}</Text>
+                    <Text style={[s.langText, isSel && s.langTextActive]}>{opt.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </Card>
 
           {/* Organization */}
           {profile.organization && (
             <Card>
-              <Text style={s.sectionLabel}>TỔ CHỨC</Text>
+              <Text style={s.sectionLabel}>{t.settings.orgSection}</Text>
               <Text style={s.orgName}>{profile.organization.name}</Text>
               <Text style={s.orgRole}>
                 Vai trò: {roleLabel}
@@ -108,7 +130,7 @@ export function SettingsScreen({ onLogout }: Props) {
           {/* Environment Profile */}
           <Card>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={s.sectionLabel}>MÔI TRƯỜNG HỆ THỐNG</Text>
+              <Text style={s.sectionLabel}>{t.settings.envSection}</Text>
               <View style={[s.envBadge, { backgroundColor: activeEnv.id === 'demo' ? C.amberBg : activeEnv.id === 'production' ? C.emeraldBg : C.navyMid + '20' }]}>
                 <Text style={[s.envBadgeText, { color: activeEnv.id === 'demo' ? C.amber : activeEnv.id === 'production' ? C.emerald : C.navyMid }]}>
                   {activeEnv.badge}
@@ -117,27 +139,27 @@ export function SettingsScreen({ onLogout }: Props) {
             </View>
             <Text style={s.envName}>{activeEnv.name}</Text>
             <Text style={s.envDesc}>{activeEnv.description}</Text>
-            <InfoRow label="API Gateway" value={activeEnv.apiUrl} />
-            <InfoRow label="Cơ sở dữ liệu" value="Supabase PostgreSQL" />
-            <InfoRow label="AI Engine" value="Gemini 2.4 + Rule Engine" />
+            <InfoRow label={t.settings.gatewayLabel} value={activeEnv.apiUrl} />
+            <InfoRow label={t.settings.databaseLabel} value={t.settings.databaseValue} />
+            <InfoRow label={t.settings.aiEngineLabel} value={t.settings.aiEngineValue} />
           </Card>
 
           {/* System Info */}
           <Card>
-            <Text style={s.sectionLabel}>PHẠM VI HỆ THỐNG</Text>
-            <InfoRow label="Tiêu chuẩn" value="GACC Protocol 2024" />
-            <InfoRow label="Thị trường" value="Trung Quốc (CN)" />
-            <InfoRow label="Mã HS" value="0810.60.00 — Sầu riêng" />
+            <Text style={s.sectionLabel}>{t.settings.scopeSection}</Text>
+            <InfoRow label={t.settings.standardLabel} value={t.settings.standardValue} />
+            <InfoRow label={t.settings.marketLabel} value={t.settings.marketValue} />
+            <InfoRow label={t.settings.hsCodeLabel} value={t.settings.hsCodeValue} />
           </Card>
 
           {/* Logout */}
           <TouchableOpacity onPress={handleLogout} style={s.logoutBtn} activeOpacity={0.8}>
-            <Text style={s.logoutText}>Đăng xuất khỏi hệ thống</Text>
+            <Text style={s.logoutText}>{t.settings.logoutBtn}</Text>
           </TouchableOpacity>
         </>
       )}
 
-      <Text style={s.version}>Themis LexiGuard Mobile v1.0.0 — Profile: {activeEnv.badge}</Text>
+      <Text style={s.version}>{t.settings.versionText} — {activeEnv.badge}</Text>
     </ScreenShell>
   );
 }
@@ -158,6 +180,12 @@ const s = StyleSheet.create({
   name:        { fontSize: FONT_SIZE.md, fontWeight: '800', color: C.textPrimary },
   email:       { fontSize: FONT_SIZE.xs, color: C.textMuted, marginTop: 2 },
   sectionLabel:{ fontSize: FONT_SIZE.xs, fontWeight: '800', color: C.textMuted, letterSpacing: 0.8, marginBottom: 8 },
+  langRow:     { flexDirection: 'row', gap: 8, marginVertical: 4 },
+  langChip:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 8, borderRadius: 10, backgroundColor: C.surfaceDim, borderWidth: 1, borderColor: C.borderFaint },
+  langChipActive: { backgroundColor: C.navyMid, borderColor: C.navyMid },
+  langFlag:    { fontSize: 14 },
+  langText:    { fontSize: 11, fontWeight: '700', color: C.textPrimary },
+  langTextActive: { color: '#fff' },
   envBadge:    { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   envBadgeText:{ fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
   envName:     { fontSize: FONT_SIZE.base, fontWeight: '800', color: C.textPrimary, marginBottom: 2 },

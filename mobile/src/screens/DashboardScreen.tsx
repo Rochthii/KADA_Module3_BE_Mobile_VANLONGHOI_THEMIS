@@ -6,6 +6,7 @@ import {
   ErrorBanner, EmptyState, Skeleton,
 } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
+import { useLocalization } from '../locales';
 
 interface DashboardSummary {
   totalBatches: number;
@@ -40,6 +41,7 @@ interface ActionItem {
 }
 
 export function DashboardScreen() {
+  const { t } = useLocalization();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [batches, setBatches] = useState<RecentBatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,17 +51,17 @@ export function DashboardScreen() {
   const actionItems: ActionItem[] = useMemo(() => [
     {
       id: 'act-1',
-      title: 'Lô DURIAN-2024-889: Thiếu Phiếu Lab Cadmium GB 2762',
+      title: t.dashboard.actionItems.phytoExpiring,
       severity: 'critical',
-      deadlineText: 'Cần nạp trước giờ đóng container',
+      deadlineText: t.dashboard.radar.phytoDesc,
     },
     {
       id: 'act-2',
-      title: 'Giấy Kiểm dịch Thực vật Phyto: Đếm ngược 14 ngày',
+      title: t.dashboard.actionItems.cadmiumWarning,
       severity: 'warning',
-      deadlineText: 'Hạn chót thông quan: 28/08/2026',
+      deadlineText: t.dashboard.radar.cadmiumDesc,
     },
-  ], []);
+  ], [t]);
 
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -78,12 +80,12 @@ export function DashboardScreen() {
         setSummary(fallbackSummary);
       }
     } catch (e: any) {
-      setError(e?.message ?? 'Không tải được dữ liệu điều hành.');
+      setError(e?.message ?? t.common.error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -99,74 +101,74 @@ export function DashboardScreen() {
 
   return (
     <ScreenShell
-      title="Ra-da & Trung tâm Điều hành"
-      subtitle="Nghị định thư GACC 2024 — Mã HS: 0810.60.00"
+      title={t.dashboard.title}
+      subtitle={t.dashboard.subtitle}
       loading={loading}
       refreshing={refreshing}
       onRefresh={() => fetchData(true)}
     >
       {error && <ErrorBanner message={error} onRetry={() => fetchData()} />}
 
-      {/* Cadmium GB 2762-2022 & Phyto Alert Banner (Feature #1) */}
+      {/* Cadmium GB 2762-2022 & Phyto Alert Banner */}
       <View style={s.radarAlertBox}>
         <View style={s.radarHeader}>
           <View style={s.radarBadge}>
-            <Text style={s.radarBadgeText}>RA-DA PHÁP LÝ GACC</Text>
+            <Text style={s.radarBadgeText}>{t.dashboard.radar.title}</Text>
           </View>
-          <Text style={s.radarTime}>Kiểm định tức thì</Text>
+          <Text style={s.radarTime}>{t.integrity.stats.merkleActive}</Text>
         </View>
-        <Text style={s.radarTitle}>Chỉ tiêu Cadmium & Hạn Kiểm dịch TV Phyto</Text>
+        <Text style={s.radarTitle}>{t.dashboard.radar.cadmiumLabel} & {t.dashboard.radar.phytoLabel}</Text>
         <View style={s.radarMetricsRow}>
           <View style={s.radarMetric}>
-            <Text style={s.radarMetricLabel}>Ngưỡng Cadmium (GB 2762)</Text>
+            <Text style={s.radarMetricLabel}>{t.dashboard.radar.cadmiumLabel}</Text>
             <Text style={s.radarMetricVal}>≤ 0.05 mg/kg</Text>
           </View>
           <View style={s.radarDivider} />
           <View style={s.radarMetric}>
-            <Text style={s.radarMetricLabel}>Thời hạn Phyto</Text>
-            <Text style={s.radarMetricVal}>14 ngày</Text>
+            <Text style={s.radarMetricLabel}>{t.dashboard.radar.phytoLabel}</Text>
+            <Text style={s.radarMetricVal}>14 {t.dashboard.kpi.billionVnd ? 'ngày' : 'days'}</Text>
           </View>
         </View>
       </View>
 
-      {/* KPI Grid 2x2 with Container & Value Valuation (Feature #3) */}
+      {/* KPI Grid 2x2 with Container & Value Valuation */}
       {summary && (
         <View style={s.kpiGrid}>
           <KpiCard
-            title="Sản lượng An toàn"
+            title={t.dashboard.kpi.activeProducts}
             value={summary.readyVolumeTons ?? summary.totalExportVolumeTons ?? 0}
             unit="Tấn"
-            subtext={`≈ ${readyContainers} Cont · ${readyValue} Tỷ`}
+            subtext={`≈ ${readyContainers} ${t.dashboard.kpi.cont} · ${readyValue} ${t.dashboard.kpi.billionVnd}`}
             accent={C.navyMid}
           />
           <KpiCard
-            title="Tỷ lệ Tuân thủ"
+            title={t.dashboard.kpi.compliantRate}
             value={summary.complianceRate}
             unit="%"
-            subtext="Theo chuẩn GACC 2024"
+            subtext={t.settings.standardValue}
             accent={summary.complianceRate >= 80 ? C.emerald : C.rose}
           />
           <KpiCard
-            title="Cần Xử lý"
+            title={t.dashboard.actionItems.badge}
             value={summary.actionRequiredBatches}
             unit="Lô"
-            subtext="Thiếu khóa chứng thư"
+            subtext={t.products.fourKeysModal.missingBanner}
             accent={summary.actionRequiredBatches > 0 ? C.rose : C.emerald}
           />
           <KpiCard
-            title="Tổng Lô Xuất khẩu"
+            title={t.dashboard.kpi.totalBatches}
             value={summary.totalBatches}
             unit="Lô"
-            subtext="Mã HS: 0810.60.00"
+            subtext={t.settings.hsCodeValue}
             accent={C.amber}
           />
         </View>
       )}
 
-      {/* Action Items Widget (Parity with Web ActionRequiredWidget) */}
+      {/* Action Items Widget */}
       <View style={s.sectionHeader}>
-        <Text style={s.sectionTitle}>Hồ sơ & Việc cần Xử lý Ngay</Text>
-        <Text style={s.sectionHint}>Ưu tiên cao</Text>
+        <Text style={s.sectionTitle}>{t.dashboard.actionItems.title}</Text>
+        <Text style={s.sectionHint}>{t.dashboard.actionItems.badge}</Text>
       </View>
 
       <View style={s.actionItemsList}>
@@ -203,14 +205,14 @@ export function DashboardScreen() {
 
       {/* Recent Batches List */}
       <View style={s.sectionHeader}>
-        <Text style={s.sectionTitle}>Lô hàng Xuất khẩu Gần nhất (4 Khóa)</Text>
-        <Text style={s.sectionHint}>Nhấn để xem chi tiết</Text>
+        <Text style={s.sectionTitle}>{t.dashboard.recentBatches.title}</Text>
+        <Text style={s.sectionHint}>{t.dashboard.recentBatches.viewAll}</Text>
       </View>
 
       {batches.length === 0 && !loading ? (
         <EmptyState
-          title="Chưa có lô hàng nào"
-          desc="Khởi tạo lô hàng đầu tiên trong tab Sản phẩm để thẩm định 4 Khóa."
+          title={t.dashboard.recentBatches.empty}
+          desc={t.products.addBatchModal.title}
         />
       ) : (
         batches.map((b) => <BatchRowMemo key={b.id} batch={b} />)
