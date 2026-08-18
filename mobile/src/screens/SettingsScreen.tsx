@@ -4,6 +4,7 @@ import { api, clearAuth, getToken } from '../lib/api';
 import { ScreenShell, Card, ErrorBanner } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
 import { activeEnv } from '../config/env';
+import { strings } from '../locales';
 
 interface UserProfile {
   id: string;
@@ -66,12 +67,7 @@ export function SettingsScreen({ onLogout }: Props) {
     );
   }
 
-  const ROLE_LABELS: Record<string, string> = {
-    OWNER:      'Chủ sở hữu',
-    MANAGER:    'Quản lý',
-    COMPLIANCE: 'Phân tích viên',
-    VIEWER:     'Xem',
-  };
+  const roleLabel = profile?.role ? (strings.roles as Record<string, string>)[profile.role] ?? profile.role : '—';
 
   return (
     <ScreenShell
@@ -104,7 +100,7 @@ export function SettingsScreen({ onLogout }: Props) {
               <Text style={s.sectionLabel}>TỔ CHỨC</Text>
               <Text style={s.orgName}>{profile.organization.name}</Text>
               <Text style={s.orgRole}>
-                Vai trò: {ROLE_LABELS[profile.role ?? ''] ?? profile.role ?? '—'}
+                Vai trò: {roleLabel}
               </Text>
             </Card>
           )}

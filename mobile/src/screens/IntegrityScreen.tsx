@@ -27,6 +27,8 @@ interface IntegrityStats {
   blockchainStatus: string;
 }
 
+import { strings } from '../locales';
+
 interface VerifyResult {
   verified: boolean;
   message: string;
@@ -36,18 +38,18 @@ interface VerifyResult {
   issuedAt?: string;
 }
 
-const ACTION_LABEL: Record<string, { label: string; color: string }> = {
-  'product.created':   { label: 'Tạo sản phẩm',      color: C.emerald },
-  'product.updated':   { label: 'Sửa sản phẩm',       color: C.blue    },
-  'product.deleted':   { label: 'Xóa sản phẩm',       color: C.rose    },
-  'batch.created':     { label: 'Tạo lô hàng',         color: C.emerald },
-  'batch.updated':     { label: 'Cập nhật lô',         color: C.blue    },
-  'document.uploaded': { label: 'Nạp tài liệu',        color: C.emerald },
-  'document.deleted':  { label: 'Xóa tài liệu',        color: C.rose    },
-  'check.started':     { label: 'Bắt đầu kiểm định',   color: C.amber   },
-  'check.completed':   { label: 'Hoàn thành kiểm định',color: C.emerald },
-  'report.approved':   { label: 'Duyệt báo cáo',       color: C.emerald },
-  'user.login_success':{ label: 'Đăng nhập',            color: C.blue    },
+const ACTION_COLORS: Record<string, string> = {
+  'product.created':   C.emerald,
+  'product.updated':   C.blue,
+  'product.deleted':   C.rose,
+  'batch.created':     C.emerald,
+  'batch.updated':     C.blue,
+  'document.uploaded': C.emerald,
+  'document.deleted':  C.rose,
+  'check.started':     C.amber,
+  'check.completed':   C.emerald,
+  'report.approved':   C.emerald,
+  'user.login_success':C.blue,
 };
 
 export function IntegrityScreen() {
@@ -214,7 +216,8 @@ export function IntegrityScreen() {
 
 // ─── Memoized Audit Row ──────────────────────────────────────────────────────
 const AuditRowMemo = React.memo(function AuditRow({ entry, isFirst }: { entry: AuditEntry; isFirst: boolean }) {
-  const cfg = ACTION_LABEL[entry.action] ?? { label: entry.action, color: C.slate };
+  const label = (strings.actions as Record<string, string>)[entry.action] ?? entry.action;
+  const color = ACTION_COLORS[entry.action] ?? C.slate;
   const date = new Date(entry.createdAt);
   const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
@@ -222,14 +225,14 @@ const AuditRowMemo = React.memo(function AuditRow({ entry, isFirst }: { entry: A
   return (
     <View style={row.wrapper}>
       <View style={row.lineCol}>
-        <View style={[row.dot, { backgroundColor: cfg.color }]} />
+        <View style={[row.dot, { backgroundColor: color }]} />
         <View style={[row.line, isFirst && { opacity: 0 }]} />
       </View>
 
       <Card style={row.card}>
         <View style={row.topRow}>
-          <View style={[row.actionTag, { backgroundColor: cfg.color + '15' }]}>
-            <Text style={[row.actionText, { color: cfg.color }]}>{cfg.label}</Text>
+          <View style={[row.actionTag, { backgroundColor: color + '15' }]}>
+            <Text style={[row.actionText, { color }]}>{label}</Text>
           </View>
           <Text style={row.time}>{dateStr} {timeStr}</Text>
         </View>

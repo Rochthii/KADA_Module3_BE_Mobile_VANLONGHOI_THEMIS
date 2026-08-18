@@ -22,6 +22,8 @@ interface CheckItem {
   completedAt?: string;
 }
 
+import { strings } from '../locales';
+
 interface ChatMsg {
   id: string;
   sender: 'user' | 'ai';
@@ -29,30 +31,25 @@ interface ChatMsg {
   time: string;
 }
 
-const RESULT_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  compliant:                { label: 'Đạt Tuân thủ GACC', bg: C.emeraldBg, text: C.emerald },
-  conditionally_compliant:  { label: 'Có điều kiện',      bg: C.amberBg,   text: C.amber   },
-  non_compliant:            { label: 'Vi phạm Tiêu chuẩn', bg: C.roseBg,    text: C.rose    },
-  insufficient_information: { label: 'Thiếu hồ sơ',       bg: C.slateBg,   text: C.slate   },
-  not_applicable:           { label: 'Không áp dụng',     bg: C.slateBg,   text: C.slate   },
-  manual_review_required:   { label: 'Cần duyệt thủ công',bg: C.amberBg,   text: C.amber   },
+const RESULT_STYLES: Record<string, { bg: string; text: string }> = {
+  compliant:                { bg: C.emeraldBg, text: C.emerald },
+  conditionally_compliant:  { bg: C.amberBg,   text: C.amber   },
+  non_compliant:            { bg: C.roseBg,    text: C.rose    },
+  insufficient_information: { bg: C.slateBg,   text: C.slate   },
+  not_applicable:           { bg: C.slateBg,   text: C.slate   },
+  manual_review_required:   { bg: C.amberBg,   text: C.amber   },
 };
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  queued:     { label: 'Đang xếp hàng', color: C.slate  },
-  processing: { label: 'AI Đang quét...',color: C.amber },
-  needs_input:{ label: 'Cần bổ sung',   color: C.amber  },
-  completed:  { label: 'Đã thẩm định',  color: C.emerald},
-  failed:     { label: 'Thất bại',      color: C.rose   },
-  cancelled:  { label: 'Đã hủy',        color: C.slate  },
+const STATUS_COLORS: Record<string, string> = {
+  queued:     C.slate,
+  processing: C.amber,
+  needs_input:C.amber,
+  completed:  C.emerald,
+  failed:     C.rose,
+  cancelled:  C.slate,
 };
 
-const QUICK_PROMPTS = [
-  'Quy định mức Cadmium GB 2762-2022?',
-  'Hạn kiểm dịch Phyto đi Trung Quốc?',
-  '4 Khóa chứng từ xuất khẩu gồm những gì?',
-  'Quy trình đăng ký CIFER Lệnh 248?',
-];
+const QUICK_PROMPTS = strings.quickPrompts;
 
 export function ChecksScreen() {
   const insets = useSafeAreaInsets();
@@ -260,8 +257,10 @@ export function ChecksScreen() {
 
 // ─── Memoized Check Card ─────────────────────────────────────────────────────
 const CheckCardMemo = React.memo(function CheckCard({ check }: { check: CheckItem }) {
-  const statusCfg = STATUS_MAP[check.status] ?? { label: check.status, color: C.slate };
-  const resultCfg = check.result ? RESULT_MAP[check.result] : null;
+  const statusLabel = (strings.checkStatuses as Record<string, string>)[check.status] ?? check.status;
+  const statusColor = STATUS_COLORS[check.status] ?? C.slate;
+  const resultLabel = check.result ? (strings.checkResults as Record<string, string>)[check.result] : null;
+  const resultStyle = check.result ? RESULT_STYLES[check.result] : null;
   const date = new Date(check.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
@@ -270,7 +269,7 @@ const CheckCardMemo = React.memo(function CheckCard({ check }: { check: CheckIte
         <View style={cc.batchBox}>
           <Text style={cc.batch}>Lô: {check.batchCode ?? 'N/A'}</Text>
         </View>
-        <Text style={[cc.status, { color: statusCfg.color }]}>{statusCfg.label}</Text>
+        <Text style={[cc.status, { color: statusColor }]}>{statusLabel}</Text>
       </View>
 
       {check.productName && (
@@ -278,9 +277,9 @@ const CheckCardMemo = React.memo(function CheckCard({ check }: { check: CheckIte
       )}
 
       <View style={cc.bottomRow}>
-        {resultCfg ? (
-          <View style={[cc.resultBadge, { backgroundColor: resultCfg.bg }]}>
-            <Text style={[cc.resultText, { color: resultCfg.text }]}>{resultCfg.label}</Text>
+        {resultLabel && resultStyle ? (
+          <View style={[cc.resultBadge, { backgroundColor: resultStyle.bg }]}>
+            <Text style={[cc.resultText, { color: resultStyle.text }]}>{resultLabel}</Text>
           </View>
         ) : (
           <View style={[cc.resultBadge, { backgroundColor: C.surfaceDim }]}>
