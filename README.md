@@ -53,6 +53,31 @@
 
 ---
 
+## 🔐 Cơ Chế Chống Giả Mạo & Chuỗi Băm SHA-256 (Anti-Tampering Architecture)
+
+Hệ thống Themis LexiGuard áp dụng cơ chế **Kẹp chì Số hóa (Cryptographic Sealing)** kết hợp chuỗi liên kết băm **SHA-256 Merkle Chain** để ngăn chặn 100% rủi ro chỉnh sửa số liệu kết quả Lab Cadmium, tẩy xóa ngày kiểm dịch Phyto hoặc mạo danh mã vùng trồng PUC khi xuất khẩu sang Hải quan Trung Quốc.
+
+```mermaid
+flowchart TD
+    subgraph Flow1 ["1️⃣ Quy Trình Niêm Phong Kẹp Chì (Sealing Report Flow)"]
+        A1["📱 Mobile / Web App\nCán bộ QA bấm 'Duyệt báo cáo'"] --> B1["🌐 API Gateway\nPOST /reports/:id/approve"]
+        B1 --> C1["⚙️ Backend Cryptographic Engine\nTính toán SHA-256 Block Fingerprint:\nSHA-256(id + batchCode + orgId + checksum(4_Keys) + previousHash + timestamp)"]
+        C1 --> D1["💾 Supabase PostgreSQL & Audit Log\nLưu reports.integrityHash + Append-Only Merkle Block\n(Khóa cứng hồ sơ - Bất biến)"]
+    end
+
+    subgraph Flow2 ["2️⃣ Quy Trình Xác Thực Liêm Chính Thực Địa (Field Verification Flow)"]
+        A2["📱 Mobile App (Tab Liêm chính)\nCán bộ Hải quan GACC dán mã băm / quét QR"] --> B2["🌐 API Gateway\nGET /integrity/verify/:hash"]
+        B2 --> C2["⚙️ Backend Integrity Engine\nTra cứu đối soát chuỗi băm Merkle Chain"]
+        C2 --> D2{"Kết Quả Đối Soát"}
+        D2 -->|✅ Tìm thấy & Khớp 100%| E2["🟢 VERIFIED: TRUE\nMã băm NGUYÊN VẸN & HỢP LỆ\n• Mã Lô: DURIAN-2024-912\n• 4 Khóa: Phyto + Lab + CO + PKG\n• Đơn vị: Sầu riêng Tây Nguyên"]
+        D2 -->|❌ Không tìm thấy / Sai lệch| F2["🔴 VERIFIED: FALSE\nCẢNH BÁO: MÃ BĂM KHÔNG HỢP LỆ\nHồ sơ đã bị sửa đổi trái phép hoặc giả mạo"]
+    end
+```
+
+> 🛡️ **Nguyên lý Mật mã học:**  
+> - **Chỉ băm Dấu vân tay Dữ liệu (Fingerprint Checksum):** Chuỗi băm SHA-256 đóng vai trò như "chữ ký kiểm toán kẹp chì", không lộ dữ liệu thô ra ngoài nhưng đảm bảo chỉ cần 1 dấu phẩy trong phiếu kiểm nghiệm Cadmium bị thay đổi, mã băm sẽ lập tức lệch và bị hệ thống từ chối thông quan.
+---
+
 ## 🏗️ Kiến Trúc Hệ Thống (System Architecture)
 
 ```mermaid
