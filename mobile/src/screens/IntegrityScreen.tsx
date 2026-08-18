@@ -53,6 +53,7 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 import { useLocalization } from '../locales';
+import { QrScannerModal } from '../components/QrScannerModal';
 
 export function IntegrityScreen() {
   const insets = useSafeAreaInsets();
@@ -63,10 +64,11 @@ export function IntegrityScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Hash verification state
+  // Hash verification & Camera state
   const [inputHash, setInputHash] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   const fetchIntegrityData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -89,16 +91,17 @@ export function IntegrityScreen() {
 
   useEffect(() => { fetchIntegrityData(); }, [fetchIntegrityData]);
 
-  // ─── Verify SHA-256 Hash Tool ──────────────────────────────────────────────
-  async function handleVerifyHash() {
-    if (!inputHash.trim()) {
+  // ─── Execute SHA-256 Hash Verification ─────────────────────────────────────
+  const executeHashVerification = useCallback(async (hashToVerify: string) => {
+    const trimmed = hashToVerify.trim();
+    if (!trimmed) {
       Alert.alert(t.common.error, t.integrity.verifyTool.emptyHashAlert);
       return;
     }
     setVerifying(true);
     setVerifyResult(null);
     try {
-      const res = await api.get<VerifyResult>(`/integrity/verify/${encodeURIComponent(inputHash.trim())}`);
+      const res = await api.get<VerifyResult>(`/integrity/verify/${encodeURIComponent(trimmed)}`);
       setVerifyResult(res);
     } catch (e: any) {
       setVerifyResult({
@@ -108,7 +111,16 @@ export function IntegrityScreen() {
     } finally {
       setVerifying(false);
     }
-  }
+  }, [t]);
+
+  const handleVerifyHash = () => {
+    executeHashVerification(inputHash);
+  };
+
+  const handleScannedData = (scannedData: string) => {
+    setInputHash(scannedData);
+    executeHashVerification(scannedData);
+  };
 
   const renderAuditItem = useCallback(({ item, index }: { item: AuditEntry; index: number }) => (
     <AuditRowMemo entry={item} isFirst={index === 0} />
@@ -168,6 +180,13 @@ export function IntegrityScreen() {
                   autoCapitalize="none"
                 />
                 <TouchableOpacity
+                  style={s.scanBtn}
+                  onPress={() => setShowScanner(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.scanBtnText}>{t.integrity.scanner.scanQrBtn}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={s.verifyBtn}
                   onPress={handleVerifyHash}
                   disabled={verifying}
@@ -212,6 +231,13 @@ export function IntegrityScreen() {
         }
         windowSize={10}
         maxToRenderPerBatch={10}
+      />
+
+      {/* Live Camera QR / Barcode Scanner Modal */}
+      <QrScannerModal
+        visible={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScanned={handleScannedData}
       />
     </View>
   );
@@ -270,13 +296,15 @@ const s = StyleSheet.create({
   verifyBox: { gap: 8, padding: 14, borderWidth: 1, borderColor: '#BFDBFE' },
   verifyTitle: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: C.navyMid },
   verifyDesc: { fontSize: 10, color: C.textSecondary },
-  hashInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  hashInputRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   hashInput: {
     flex: 1, height: 42, borderWidth: 1, borderColor: C.border,
-    borderRadius: 8, paddingHorizontal: 10, fontSize: FONT_SIZE.xs,
+    borderRadius: 8, paddingHorizontal: 8, fontSize: 11,
     backgroundColor: C.surface, color: C.textPrimary, fontVariant: ['tabular-nums'],
   },
-  verifyBtn: { backgroundColor: C.navyMid, paddingHorizontal: 12, height: 42, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  scanBtn: { backgroundColor: C.surfaceDim, borderWidth: 1, borderColor: C.navyMid, paddingHorizontal: 10, height: 42, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  scanBtnText: { color: C.navyMid, fontSize: 10, fontWeight: '900', letterSpacing: 0.2 },
+  verifyBtn: { backgroundColor: C.navyMid, paddingHorizontal: 10, height: 42, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   verifyBtnText: { color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 0.3 },
   verifyResultCard: { borderRadius: 8, padding: 10, borderWidth: 1, gap: 4 },
   verifyResultTitle: { fontSize: 11, fontWeight: '900' },

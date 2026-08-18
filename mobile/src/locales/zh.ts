@@ -146,6 +146,18 @@ export const zh = {
       failedTitle: '警告：哈希校验失败或单证已被篡改',
       emptyHashAlert: '请输入需要校验的 SHA-256 哈希码。',
     },
+    scanner: {
+      scanQrBtn: '📷 扫描二维码/条码',
+      modalTitle: '扫描包装箱二维码 / 封条',
+      instruction: '请将摄像头对准榴莲外箱二维码或海关封条条码进行自动比对',
+      permissionTitle: '需要相机访问权限',
+      permissionDesc: '本应用需要相机权限以扫描现场货物二维码和防伪标签。',
+      grantBtn: '授予相机权限',
+      torchOn: '开手电筒',
+      torchOff: '关手电筒',
+      closeBtn: '关闭扫描',
+      scannedSuccess: '已成功识别哈希码！',
+    },
     timeline: {
       title: '审计日志时间线',
       subtitle: '不可篡改记录',

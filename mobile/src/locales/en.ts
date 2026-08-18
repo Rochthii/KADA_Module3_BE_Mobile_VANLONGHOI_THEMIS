@@ -146,6 +146,18 @@ export const en = {
       failedTitle: 'WARNING: INVALID HASH OR TAMPERED DOSSIER',
       emptyHashAlert: 'Please enter a SHA-256 hash to verify.',
     },
+    scanner: {
+      scanQrBtn: '📷 SCAN QR / BARCODE',
+      modalTitle: 'SCAN PACKAGING QR / CONTAINER SEAL',
+      instruction: 'Point camera at carton QR code or customs seal barcode for instant verification',
+      permissionTitle: 'Camera Permission Required',
+      permissionDesc: 'Themis LexiGuard needs camera access to scan field QR codes and security seals.',
+      grantBtn: 'Grant Camera Permission',
+      torchOn: 'Flashlight On',
+      torchOff: 'Flashlight Off',
+      closeBtn: 'Close Scanner',
+      scannedSuccess: 'Hash signature identified successfully!',
+    },
     timeline: {
       title: 'Audit Log Timeline',
       subtitle: 'Immutable Ledger',

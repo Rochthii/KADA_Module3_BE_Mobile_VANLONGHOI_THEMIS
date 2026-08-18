@@ -146,6 +146,18 @@ export const vi = {
       failedTitle: 'CẢNH BÁO: MÃ BĂM KHÔNG HỢP LỆ',
       emptyHashAlert: 'Vui lòng nhập mã băm SHA-256 cần kiểm tra.',
     },
+    scanner: {
+      scanQrBtn: '📷 QUÉT MÃ QR',
+      modalTitle: 'QUÉT MÃ QR / TEM SEAL THÙNG',
+      instruction: 'Hướng camera vào mã QR hoặc mã vạch trên thùng hàng để đối soát tự động',
+      permissionTitle: 'Yêu cầu quyền truy cập Camera',
+      permissionDesc: 'Ứng dụng cần quyền Camera để quét mã QR và tem kiểm định thực địa.',
+      grantBtn: 'Cấp quyền Camera',
+      torchOn: 'Bật đèn',
+      torchOff: 'Tắt đèn',
+      closeBtn: 'Đóng quét',
+      scannedSuccess: 'Đã nhận diện mã băm thành công!',
+    },
     timeline: {
       title: 'Dòng thời gian Nhật ký Kiểm toán',
       subtitle: 'Ghi nhận bất biến',
