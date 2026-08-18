@@ -20,7 +20,7 @@
 
 | 1️⃣ Điều Hành (Dashboard) | 2️⃣ Sản Phẩm & 4 Khóa | 3️⃣ Tư Vấn AI GACC |
 | :---: | :---: | :---: |
-| <img src="../docs/assets/screenshots/mobile_01_dashboard.jpg" width="220" alt="Dashboard" /> | <img src="../docs/assets/screenshots/mobile_02_products.jpg" width="220" alt="Products & 4 Keys" /> | <img src="../docs/assets/screenshots/mobile_03_checks.jpg" width="220" alt="AI Advisor" /> |
+| <img src="../docs/assets/screenshots/mobile_01_dashboard.jpg" width="220" alt="Dashboard" /> | <img src="../docs/assets/screenshots/mobile_02_add_product.jpg" width="220" alt="Products & 4 Keys" /> | <img src="../docs/assets/screenshots/mobile_03_ai_chat.jpg" width="220" alt="AI Advisor" /> |
 | **Ra-da Cadmium & Hạn Phyto 14 ngày**<br>Lưới KPI trực quan & Lô hàng cần xử lý | **Quản lý Lô & Nạp 4 Khóa Hồ sơ**<br>Phyto + Lab + CO Form E + Packing List | **Trợ lý Pháp lý Bỏ túi**<br>Hỏi đáp Lệnh 248/249 & Nghị định thư GACC |
 
 | 4️⃣ Liêm Chính & Quét QR | 5️⃣ Cài Đặt & Đa Ngôn Ngữ |
