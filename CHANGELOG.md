@@ -8,6 +8,19 @@ Tất cả các thay đổi quan trọng của dự án **Themis LexiGuard** s�
 
 ## [Unreleased]
 
+### Added — 2026-08-18: Live Camera QR/Barcode Scanner, 100% Localization & Anti-Tampering Workflows
+- **`mobile/src/components/QrScannerModal.tsx`**: Tích hợp module camera quét mã thời gian thực chuẩn Expo SDK 54 (`expo-camera`), hỗ trợ đa định dạng mã (QR Code, Code 128 / GS1-128, EAN-13, Code 39), khung ngắm radar màu vàng kim viền laser, nút bật/tắt đèn pin (Flashlight/Torch) và tự động trích xuất chuỗi băm SHA-256 từ URL/Mã seal để đối soát trong 1 giây.
+- **`mobile/src/screens/IntegrityScreen.tsx`**: Trang bị nút **"📷 QUÉT QR"** bên cạnh ô nhập mã băm, tự động kích hoạt camera, trích xuất mã và gửi lệnh đối soát trực tiếp tới Backend API `/integrity/verify/:hash`.
+- **`mobile/src/locales/`**: Xây dựng hệ thống Bản địa hóa Đa ngôn ngữ (Localization Engine) hoàn chỉnh không còn bất kỳ chuỗi hardcoded nào:
+  - `vi.ts`: Tiếng Việt nghiệp vụ chuẩn hóa.
+  - `zh.ts`: 中文 chuyên ngành Hải quan GACC Trung Quốc.
+  - `en.ts`: English thương mại quốc tế.
+  - `index.ts`: Hook phản ứng nhanh `useLocalization()`, bộ chọn ngôn ngữ động không cần reload app.
+- **`mobile/src/screens/SettingsScreen.tsx`**: Tích hợp **Widget Bộ chọn Ngôn ngữ (Language Switcher)** với 3 nút chuyển đổi 1 chạm: 🇻🇳 `Tiếng Việt`, 🇨🇳 `中文`, 🇬🇧 `English`.
+- **`mobile/src/config/env.ts`**: Xây dựng kiến trúc 3 môi trường phân định rõ ràng (`development`, `demo`, `production`) phục vụ thuyết trình và vận hành thực tế.
+- **`be/scripts/seed-admin-and-demo.ts` & Live DB**: Cập nhật chuẩn xác thông tin đại diện pháp luật và chủ sở hữu thành **Chăm Rốch Thi** trong CSDL Supabase PostgreSQL.
+- **`mobile/README.md` & `README.md`**: Thiết kế sơ đồ phân luồng Mật mã học Chống giả mạo SHA-256 (Anti-Tampering Flow) với bảng màu Dark-Tech chuẩn chuyên gia và tài liệu hướng dẫn chuyên nghiệp cho submodule Mobile.
+
 ### Added — 2026-08-17: Mobile Native Architecture (100% Expo Go Compatible)
 - **`mobile/App.tsx`**: Xây dựng kiến trúc React Navigation v7 native với Auth Gate (Splash → LoginScreen → 5 Bottom Tabs: `DIEU_HANH`, `SAN_PHAM`, `TU_VAN`, `LIEM_CHINH`, `CAI_DAT`). Thiết kế 0% emoji, sử dụng text badge nhận diện (`[DH]`, `[SP]`, `[AI]`, `[LC]`, `[CD]`), tone màu Deep Navy `#00143B` & Imperial Gold `#FFB800`.
 - **`mobile/src/lib/api.ts`**: Xây dựng client kết nối trực tiếp RESTful API Backend (`http://<LAN_IP>:3001/api`), lưu trữ session bảo mật qua `expo-secure-store`, auto-attach JWT Bearer token và header `x-organization-id`.
