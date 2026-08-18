@@ -37,6 +37,6 @@
     "typescript": "~5.8.2"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx scripts/seed-admin-and-demo.ts"
   }
 }

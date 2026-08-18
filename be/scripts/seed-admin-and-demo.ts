@@ -39,7 +39,7 @@ const ADMIN_USER = {
 const BUSINESS_USER = {
   email: 'rochthi2006@gmail.com',
   password: 'Demo2026!',   // mật khẩu khởi tạo — user có thể đổi qua forgot-password
-  fullName: 'Roch Thị Lan Anh',
+  fullName: 'Chăm Rốch Thi',
   jobTitle: 'Giám đốc Xuất Nhập Khẩu',
 };
 
@@ -47,7 +47,7 @@ const DEMO_ORGANIZATION = {
   name: 'Công ty TNHH Xuất Khẩu Sầu Riêng Tây Nguyên',
   taxCode: '0601234567',
   address: '45 Phan Chu Trinh, TP. Buôn Ma Thuột, Đắk Lắk, Việt Nam',
-  legalRepresentative: 'Roch Thị Lan Anh',
+  legalRepresentative: 'Chăm Rốch Thi',
   contactEmail: 'export@sauriengwesternhighlands.vn',
   contactPhone: '0262 3812 456',
   primaryProduct: 'Sầu riêng Monthong & Ri6 — Mã HS 0810.60.00',
