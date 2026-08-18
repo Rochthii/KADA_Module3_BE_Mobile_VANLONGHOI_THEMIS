@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
+import { activeEnv } from '../config/env';
 
-const BE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.100.234:3001/api';
+const BE_URL = activeEnv.apiUrl;
 const TOKEN_KEY = 'themis_token';
 const ORG_KEY = 'themis_org_id';
 

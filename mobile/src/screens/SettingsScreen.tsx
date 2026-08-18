@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { api, clearAuth, getToken } from '../lib/api';
 import { ScreenShell, Card, ErrorBanner } from '../components/ui';
 import { C, FONT_SIZE } from '../lib/theme';
+import { activeEnv } from '../config/env';
 
 interface UserProfile {
   id: string;
@@ -108,6 +109,23 @@ export function SettingsScreen({ onLogout }: Props) {
             </Card>
           )}
 
+          {/* Environment Profile */}
+          <Card>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={s.sectionLabel}>MÔI TRƯỜNG HỆ THỐNG</Text>
+              <View style={[s.envBadge, { backgroundColor: activeEnv.id === 'demo' ? C.amberBg : activeEnv.id === 'production' ? C.emeraldBg : C.navyMid + '20' }]}>
+                <Text style={[s.envBadgeText, { color: activeEnv.id === 'demo' ? C.amber : activeEnv.id === 'production' ? C.emerald : C.navyMid }]}>
+                  {activeEnv.badge}
+                </Text>
+              </View>
+            </View>
+            <Text style={s.envName}>{activeEnv.name}</Text>
+            <Text style={s.envDesc}>{activeEnv.description}</Text>
+            <InfoRow label="API Gateway" value={activeEnv.apiUrl} />
+            <InfoRow label="Cơ sở dữ liệu" value="Supabase PostgreSQL" />
+            <InfoRow label="AI Engine" value="Gemini 2.4 + Rule Engine" />
+          </Card>
+
           {/* System Info */}
           <Card>
             <Text style={s.sectionLabel}>PHẠM VI HỆ THỐNG</Text>
@@ -123,7 +141,7 @@ export function SettingsScreen({ onLogout }: Props) {
         </>
       )}
 
-      <Text style={s.version}>Themis LexiGuard Mobile v1.0.0</Text>
+      <Text style={s.version}>Themis LexiGuard Mobile v1.0.0 — Profile: {activeEnv.badge}</Text>
     </ScreenShell>
   );
 }
@@ -144,6 +162,10 @@ const s = StyleSheet.create({
   name:        { fontSize: FONT_SIZE.md, fontWeight: '800', color: C.textPrimary },
   email:       { fontSize: FONT_SIZE.xs, color: C.textMuted, marginTop: 2 },
   sectionLabel:{ fontSize: FONT_SIZE.xs, fontWeight: '800', color: C.textMuted, letterSpacing: 0.8, marginBottom: 8 },
+  envBadge:    { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  envBadgeText:{ fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
+  envName:     { fontSize: FONT_SIZE.base, fontWeight: '800', color: C.textPrimary, marginBottom: 2 },
+  envDesc:     { fontSize: 10, color: C.textSecondary, marginBottom: 8, lineHeight: 15 },
   orgName:     { fontSize: FONT_SIZE.base, fontWeight: '700', color: C.textPrimary },
   orgRole:     { fontSize: FONT_SIZE.xs, color: C.textSecondary, marginTop: 4 },
   logoutBtn:   { backgroundColor: C.roseBg, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#FECDD3' },
